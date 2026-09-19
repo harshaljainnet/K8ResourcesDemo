@@ -1,0 +1,27 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8resourcesdemo-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k8resourcesdemo
+  template:
+    metadata:
+      labels:
+        app: k8resourcesdemo
+    spec:
+      containers:
+      - name: k8resourcesdemo
+        image: k8resourcesdemo:1.0
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
