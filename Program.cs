@@ -1,6 +1,37 @@
-var builder = WebApplication.CreateBuilder(args);
-var app = builder.Build();
+using System.Runtime.InteropServices;
 
-app.MapGet("/", () => "K8 Resources Demo - Application is running!");
+var app = WebApplication.CreateBuilder(args).Build();
+
+// Every item in this list = 1 MB of memory that the app is holding on to
+var held = new List<IntPtr>();
+
+// Shows how much memory the app holds, and the limit Kubernetes gave it
+app.MapGet("/status", () => new
+{
+    heldByAppMB = held.Count,
+    containerLimit = ReadLimit()
+});
+
+// Adds memory. Example: /eat?mb=50 adds 50 MB each time you call it
+app.MapGet("/eat", (int mb = 50) =>
+{
+    for (int i = 0; i < mb; i++)
+    {
+        var chunk = Marshal.AllocHGlobal(1024 * 1024);          // ask for 1 MB
+        for (int offset = 0; offset < 1024 * 1024; offset += 4096)
+            Marshal.WriteByte(chunk, offset, 1);                // really use it
+        held.Add(chunk);
+    }
+    return new { heldByAppMB = held.Count };
+});
 
 app.Run();
+
+// Reads the memory limit that Kubernetes set (your 256Mi)
+static string ReadLimit()
+{
+    foreach (var path in new[] { "/sys/fs/cgroup/memory.max", "/sys/fs/cgroup/memory/memory.limit_in_bytes" })
+        if (File.Exists(path) && long.TryParse(File.ReadAllText(path).Trim(), out var bytes))
+            return $"{bytes / 1024 / 1024} MB";
+    return "no limit found";
+}
