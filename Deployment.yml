@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: k8resourcesdemo
-          image: k8resourcesdemo:1.0
+          image: k8resourcesdemo:1.1  
           imagePullPolicy: Never
           ports:
             - containerPort: 8080

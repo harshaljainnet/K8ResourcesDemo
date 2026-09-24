@@ -25,6 +25,21 @@ app.MapGet("/eat", (int mb = 50) =>
     return new { heldByAppMB = held.Count };
 });
 
+
+// In simple words - this API keeps the CPU busy for the given seconds
+// In real world - high traffic causes this same high CPU usage
+// HPA will see this high CPU and add more pods
+app.MapGet("/burn", (int seconds = 30) =>
+{
+    var end = DateTime.UtcNow.AddSeconds(seconds);
+    while (DateTime.UtcNow < end)
+    {
+        Math.Sqrt(12345.6789); // pointless math, just to keep the CPU busy
+    }
+    return new { podName = Environment.MachineName, burned = $"{seconds}s" };
+});
+
+
 app.Run();
 
 // Reads the memory limit that Kubernetes set (your 256Mi)
